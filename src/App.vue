@@ -7,33 +7,6 @@ import { useCartStore } from "./stores/CartStore";
 
 const cartStore = useCartStore();
 const productStore = useProductStore();
-const history = reactive([]);
-const future = reactive([]);
-const doingHistory = ref(false);
-history.push(JSON.stringify(cartStore.$state));
-
-const redo = () => {
-  const latestState = future.pop();
-  if (!latestState) return;
-  doingHistory.value = true;
-  history.push(latestState);
-  cartStore.$state = JSON.parse(latestState);
-  doingHistory.value = false;
-};
-const undo = () => {
-  if (history.length === 1) return;
-  doingHistory.value = true;
-  future.push(history.pop());
-  cartStore.$state = JSON.parse(history.at(-1));
-  doingHistory.value = false;
-};
-
-cartStore.$subscribe((mutation, state) => {
-  if (!doingHistory.value) {
-    history.push(JSON.stringify(state));
-    future.splice(0, future.length);
-  }
-});
 
 cartStore.$onAction(({ name, store, args, after, onError }) => {
   if (name === "addItems") {
@@ -49,8 +22,8 @@ productStore.fill();
   <div class="container">
     <TheHeader />
     <div class="mb-5 flex justify-end">
-      <AppButton @click="undo">Undo</AppButton>
-      <AppButton class="ml-2" @click="redo">Redo</AppButton>
+      <AppButton @click="cartStore.undo">Undo</AppButton>
+      <AppButton class="ml-2" @click="cartStore.redo">Redo</AppButton>
     </div>
     <ul class="sm:flex flex-wrap lg:flex-nowrap gap-5">
       <ProductCard
